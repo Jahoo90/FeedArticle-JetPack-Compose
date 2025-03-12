@@ -28,12 +28,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallTopAppBar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,35 +49,41 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.devid.feedarticlescompose.R
+import com.devid.feedarticlescompose.network.dtos.ArticlesResponseItem
 import com.devid.feedarticlescompose.ui.theme.PrimaryColor
 import com.devid.feedarticlescompose.ui.theme.VeryLightGray
 import com.devid.feedarticlescompose.ui.theme.VeryLightPrimaryColor
+import kotlinx.coroutines.delay
 
 @Composable
 fun MainScreen(navController: NavController, viewModel: MainViewModel) {
-
     MainContent(navController, viewModel)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainContent(navController: NavController, viewModel: MainViewModel) {
-    val articles by viewModel.articles.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
+fun MainContent(navController: NavController, mainViewModel: MainViewModel) {
 
-    LaunchedEffect(Unit) {
-        viewModel.fetchArticles()
+    val articles by mainViewModel.articles.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+//    val allArticles = articles.toList()
+    val allArticles: List<ArticlesResponseItem> = articles
+
+    LaunchedEffect(mainViewModel) {
+        mainViewModel.errorMessage.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
     }
-//    Log.d("jahoo", "msg from composable : MainContent : ${articles}")
 
     Scaffold(
-        topBar = { MainTopAppBar(navController, viewModel) },
-        bottomBar = { BottomNavigationBar(viewModel) }
+        topBar = { MainTopAppBar(navController, mainViewModel) },
+        bottomBar = { BottomNavigationBar(mainViewModel) },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -82,34 +91,15 @@ fun MainContent(navController: NavController, viewModel: MainViewModel) {
                 .padding(paddingValues),
             verticalArrangement = Arrangement.Top
         ) {
-            if (errorMessage != null) {
-                Text(
-                    text = "Error: $errorMessage",
-                    color = androidx.compose.ui.graphics.Color.Red,
-                    modifier = Modifier.padding(16.dp)
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(articles.size) { index ->
-                        val article = articles[index]
-                        ArticleItem(
-                            title = article.titre,
-                            description = article.descriptif,
-                            imageUrl = article.urlImage
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
 
-                    }
-
-//                    items(items = articles) { article ->
-//                        ArticleItem(
-//                            title = article.titre,
-//                            description = article.description,
-//                            imageUrl = article.url
-//                        )
-//                    }
+                items(allArticles.size) { index ->
+                    ArticleItem(
+                        title = allArticles[index].titre,
+                        description = allArticles[index].descriptif,
+                        imageUrl = allArticles[index].urlImage)
                 }
             }
         }
@@ -118,18 +108,20 @@ fun MainContent(navController: NavController, viewModel: MainViewModel) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainTopAppBar(navController: NavController, viewModel: MainViewModel) {
+fun MainTopAppBar(navController: NavController, mainViewModel: MainViewModel) {
     SmallTopAppBar(
         title = { Text("") },
         colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = VeryLightGray),
         navigationIcon = {
-            IconButton(onClick = {}) {
+            IconButton(onClick = {
+                navController.navigate("create")
+            }) {
                 Icon(Icons.Default.Add, contentDescription = "Add article")
             }
         },
         actions = {
             IconButton(onClick = {
-                viewModel.logout()
+                mainViewModel.logout()
                 navController.navigate("login") {
                     popUpTo("main") { inclusive = true }
                 }
@@ -141,8 +133,8 @@ fun MainTopAppBar(navController: NavController, viewModel: MainViewModel) {
 }
 
 @Composable
-fun BottomNavigationBar(viewModel: MainViewModel) {
-    var selectedRadio by remember { mutableStateOf(0) }
+fun BottomNavigationBar(mainViewModel: MainViewModel) {
+    var selectedRadio by remember { mutableIntStateOf(0) }
 
     BottomAppBar {
         Row(
@@ -207,8 +199,6 @@ fun ArticleItem(
                     fontSize = 22.sp,
                     color = Color.Black
                 )
-//                Spacer(modifier = Modifier.height(8.dp))
-//                Text(text = description, fontSize = 16.sp, color = Color.Black)
             }
         }
     }

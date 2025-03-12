@@ -7,6 +7,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.devid.feedarticlescompose.ui.create.CreateScreen
+import com.devid.feedarticlescompose.ui.create.CreateViewModel
 import com.devid.feedarticlescompose.ui.login.LoginScreen
 import com.devid.feedarticlescompose.ui.login.LoginViewModel
 import com.devid.feedarticlescompose.ui.main.MainScreen
@@ -45,6 +47,10 @@ fun Navigation(navController: NavHostController = rememberNavController()) {
         composable(Screen.Register.route) {
             val registerViewModel: RegisterViewModel = hiltViewModel()
             RegisterScreen(navController = navController, registerViewModel = registerViewModel)
+        }
+        composable(Screen.Create.route) {
+            val createViewModel: CreateViewModel = hiltViewModel()
+            CreateScreen(navController = navController, createViewModel = createViewModel)
         }
     }
 }

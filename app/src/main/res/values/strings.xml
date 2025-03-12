@@ -15,5 +15,7 @@
     <string name="register_success">"New account created with success ! "</string>
     <string name="login_already_used">This login exist already.</string>
     <string name="something_went_wrong">Something went wrong. Please try again.</string>
+    <string name="create_title">Nouvel Article</string>
+    <string name="create_titre_hint">Titre</string>
 
 </resources>
