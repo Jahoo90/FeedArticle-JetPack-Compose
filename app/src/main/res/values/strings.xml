@@ -24,5 +24,10 @@
     <string name="connection_problem">Connection problem. Please try again !</string>
     <string name="create_failed">\"Oops, the article could not be added. Please try again!\"</string>
     <string name="create_access">Please re-login and try again !</string>
+    <string name="error_empty_response">"No data from server. Contact support ! "</string>
+    <string name="error_fetch_articles">We have some problem to get articles for you. Contact support and try again later.</string>
+    <string name="sport">Cat. Sport</string>
+    <string name="manga">Cat. Manga</string>
+    <string name="divers">Cat. Divers</string>
 
 </resources>

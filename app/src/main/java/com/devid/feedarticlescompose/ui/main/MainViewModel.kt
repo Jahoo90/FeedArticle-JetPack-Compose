@@ -1,12 +1,18 @@
 package com.devid.feedarticlescompose.ui.main
 
+import android.app.Application
+import android.content.Context
 import android.util.Log
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.devid.feedarticlescompose.R
 import com.devid.feedarticlescompose.network.ApiInterface
 import com.devid.feedarticlescompose.network.dtos.ArticlesResponseItem
 import com.devid.feedarticlescompose.utils.SharedPrefManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +26,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val apiInterface: ApiInterface,
-    private val sharedPrefManager: SharedPrefManager
+    private val sharedPrefManager: SharedPrefManager,
+    private val context: Context
 ) : ViewModel() {
 
     private val _articles = MutableStateFlow<List<ArticlesResponseItem>>(emptyList())
@@ -40,6 +47,12 @@ class MainViewModel @Inject constructor(
     private val _categoryColor = MutableStateFlow(0)
     val categoryColor: StateFlow<Int> = _categoryColor.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+
+
+
     init {
         fetchArticles()
         Log.i("jahoo", "Token is : ${sharedPrefManager.getUserToken()} \n User Id is : ${sharedPrefManager.getUserId()}")
@@ -56,18 +69,12 @@ class MainViewModel @Inject constructor(
                     response.body()?.let { articles ->
                         _allArticles.value = articles
                         _articles.value =  articles
-                    } ?: _errorMessage.emit("Response body is null")
-//                    val body = response.body()
-//                    if (body != null) {
-//                        _articles.value = body
-//                    } else {
-//                        _errorMessage.emit("Response body is null")
-//                    }
+                    } ?: _errorMessage.emit(context.getString(R.string.error_empty_response))
                 } else {
-                    _errorMessage.emit("Error fetching articles from API: ${response.code()}")
+                    _errorMessage.emit(context.getString(R.string.error_fetch_articles))
                 }
             } catch (e: Exception) {
-                _errorMessage.emit(e.message ?: "Unknown error")
+                _errorMessage.emit(e.message ?: context.getString(R.string.error_fetch_articles))
             } finally {
                 _isLoading.value = false
             }
@@ -80,6 +87,15 @@ class MainViewModel @Inject constructor(
             _allArticles.value
         } else {
             _allArticles.value.filter { it.categorie == category }
+        }
+    }
+
+    fun onRefresh() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            delay(2000)
+            fetchArticles()
+            _isRefreshing.value = false
         }
     }
 

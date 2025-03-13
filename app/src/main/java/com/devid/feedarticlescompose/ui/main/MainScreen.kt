@@ -1,15 +1,20 @@
 package com.devid.feedarticlescompose.ui.main
 
 
+import android.R.attr.minLines
 import android.graphics.drawable.Icon
 import android.util.Log
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,7 +22,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PowerSettingsNew
@@ -27,31 +34,38 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -67,37 +81,57 @@ import com.devid.feedarticlescompose.ui.theme.VeryLightGray
 import com.devid.feedarticlescompose.ui.theme.VeryLightGreenr
 import com.devid.feedarticlescompose.ui.theme.VeryLightPrimaryColor
 import com.devid.feedarticlescompose.ui.theme.VeryLightRed
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.time.delay
+import java.util.Collections.rotate
 
 @Composable
 fun MainScreen(navController: NavController, viewModel: MainViewModel) {
-    MainContent(navController, viewModel)
+
+    val articles by viewModel.articles.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val selectedCategory by viewModel.selectedCategory.collectAsState()
+
+    LaunchedEffect(viewModel) {
+        viewModel.errorMessage.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+    MainContent(
+        navController = navController,
+        articles = articles,
+        snackbarHostState = snackbarHostState,
+        selectedCategory = selectedCategory,
+        onCategorySelected = { index -> viewModel.filterArticlesByCategory(index) },
+        onLogout = {
+            viewModel.logout()
+            navController.navigate("login") {
+                popUpTo("main") { inclusive = true }
+            }
+        },
+        onRefresh = { viewModel.fetchArticles() }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainContent(navController: NavController, mainViewModel: MainViewModel) {
-
-
-    /*val articles by mainViewModel.articles.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
-//    val allArticles = articles.toList()
-    val allArticles: List<ArticlesResponseItem> = articles
-//    var filteredArticles = mainViewModel.getFilteredArticles()*/
-
-    val articles by mainViewModel.articles.collectAsState()
-    val selectedCategory by mainViewModel.selectedCategory.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(mainViewModel) {
-        mainViewModel.errorMessage.collect { message ->
-            snackbarHostState.showSnackbar(message)
-        }
+fun MainContent(
+    navController: NavController,
+    articles: List<ArticlesResponseItem>,
+    snackbarHostState: SnackbarHostState,
+    selectedCategory: Int,
+    onCategorySelected: (Int) -> Unit,
+    onLogout: () -> Unit,
+    onRefresh: () -> Unit
+) {
+    val state = rememberPullToRefreshState()
+    var isRefreshing by remember {
+        mutableStateOf(false)
     }
 
     Scaffold(
-        topBar = { MainTopAppBar(navController, mainViewModel) },
-        bottomBar = { BottomNavigationBar(mainViewModel) },
+        topBar = { MainTopAppBar(navController, onLogout) },
+        bottomBar = { BottomNavigationBar(selectedCategory, onCategorySelected) },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
@@ -106,24 +140,37 @@ fun MainContent(navController: NavController, mainViewModel: MainViewModel) {
                 .padding(paddingValues),
             verticalArrangement = Arrangement.Top
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize()
-            ) {
-//                items(articles) { article -> // Używamy przefiltrowanej listy
-//                    ArticleItem(
-//                        title = article.titre,
-//                        description = article.descriptif,
-//                        imageUrl = article.urlImage,
-//                        category = article.categorie
-//                    )
-//                }
-                items(articles.size) { index ->
-                    ArticleItem(
-                        title = articles[index].titre,
-                        description = articles[index].descriptif,
-                        imageUrl = articles[index].urlImage,
-                        category = articles[index].categorie
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    isRefreshing = true
+                    onRefresh()
+                    isRefreshing = false} ,
+                state = state,
+                indicator = {
+                    Indicator(
+                        modifier = Modifier.align(Alignment.TopCenter).rotate(360f),
+                        isRefreshing = isRefreshing,
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        state = state,
                     )
+                },
+            )
+            {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(articles.size) { index ->
+                        val article = articles[index]
+                        ArticleItem(
+                            title = article.titre,
+                            description = article.descriptif,
+                            imageUrl = article.urlImage,
+                            category = article.categorie,
+//                            date = article.createdAt,
+                        )
+                    }
                 }
             }
         }
@@ -132,24 +179,17 @@ fun MainContent(navController: NavController, mainViewModel: MainViewModel) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainTopAppBar(navController: NavController, mainViewModel: MainViewModel) {
-    SmallTopAppBar(
+fun MainTopAppBar(navController: NavController, onLogout: () -> Unit) {
+    TopAppBar(
         title = { Text("") },
-        colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = VeryLightGray),
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = VeryLightGray),
         navigationIcon = {
-            IconButton(onClick = {
-                navController.navigate("create")
-            }) {
+            IconButton(onClick = { navController.navigate("create") }) {
                 Icon(Icons.Default.Add, contentDescription = "Add article")
             }
         },
         actions = {
-            IconButton(onClick = {
-                mainViewModel.logout()
-                navController.navigate("login") {
-                    popUpTo("main") { inclusive = true }
-                }
-            }) {
+            IconButton(onClick = onLogout) {
                 Icon(Icons.Default.PowerSettingsNew, contentDescription = "Logout")
             }
         }
@@ -157,9 +197,7 @@ fun MainTopAppBar(navController: NavController, mainViewModel: MainViewModel) {
 }
 
 @Composable
-fun BottomNavigationBar(mainViewModel: MainViewModel) {
-
-    val selectedCategory by mainViewModel.selectedCategory.collectAsState()
+fun BottomNavigationBar(selectedCategory: Int, onCategorySelected: (Int) -> Unit) {
     val categories = listOf("Tout", "Sport", "Manga", "Divers")
 
     BottomAppBar {
@@ -173,14 +211,11 @@ fun BottomNavigationBar(mainViewModel: MainViewModel) {
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
                         .fillMaxHeight()
-                        .clickable { mainViewModel.filterArticlesByCategory(index) }
+                        .clickable { onCategorySelected(index) }
                 ) {
                     RadioButton(
                         selected = selectedCategory == index,
-                        onClick = {
-                            mainViewModel.filterArticlesByCategory(index)
-                            Log.i("jahoo", "index is : $index")
-                        },
+                        onClick = { onCategorySelected(index) },
                         colors = RadioButtonDefaults.colors(
                             selectedColor = when (index) {
                                 1 -> Green
@@ -188,15 +223,14 @@ fun BottomNavigationBar(mainViewModel: MainViewModel) {
                                 else -> PrimaryColor
                             },
                             unselectedColor = when (index) {
-                            1 -> LightGreenr
-                            2 -> LightRed
-                            else -> LightPrimaryColor
-                        }
+                                1 -> LightGreenr
+                                2 -> LightRed
+                                else -> LightPrimaryColor
+                            }
                         )
                     )
                     Text(text = text)
                 }
-
             }
         }
     }
@@ -219,11 +253,13 @@ fun ArticleItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background( when (category) {
-                    1 -> VeryLightGreenr
-                    2 -> VeryLightRed
-                    else -> VeryLightPrimaryColor
-                }),
+                .background(
+                    when (category) {
+                        1 -> VeryLightGreenr
+                        2 -> VeryLightRed
+                        else -> VeryLightPrimaryColor
+                    }
+                ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AsyncImage(
@@ -242,7 +278,6 @@ fun ArticleItem(
                 contentScale = ContentScale.Crop
             )
 
-
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = title,
@@ -254,3 +289,110 @@ fun ArticleItem(
         }
     }
 }
+
+
+/*
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ClickedArticleItem(
+    title: String,
+    description: String,
+    imageUrl: String?,
+    category: Int,
+    date: String,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    when (category) {
+                        1 -> VeryLightGreenr
+                        2 -> VeryLightRed
+                        else -> VeryLightPrimaryColor
+                    }
+                )
+                .padding(10.dp),
+
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Row(
+
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl)
+                        .crossfade(true)
+                        .error(R.drawable.feedarticleslogo)
+                        .placeholder(R.drawable.feedarticleslogo)
+                        .build(),
+                    contentDescription = "Article Image",
+                    modifier = Modifier
+                        .width(80.dp)
+                        .height(80.dp)
+                        .clip(CircleShape)
+                        .border(1.dp, Color.LightGray, CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+                Text(
+                    text = title,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 26.sp,
+                    color = Color.Black,
+                    modifier = Modifier.padding(22.dp)
+                )
+            }
+
+
+
+            Column(modifier = Modifier.padding(16.dp)) {
+
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = date,
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                    )
+                    Text(
+                        text = when (category) {
+                            1 -> stringResource(R.string.sport)
+                            2 -> stringResource(R.string.manga)
+                            else -> stringResource(R.string.divers)
+                        },
+
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                    )
+                }
+                Column {
+                    Text(
+                        text = description,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color.Black,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+    }
+}
+
+*/

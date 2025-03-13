@@ -52,10 +52,12 @@ dependencies {
     val hiltVersion = "2.55"
     val retrofitVersion = "2.9.0"
     val moshiVersion = "1.15.0"
-    val kotlin_version = "1.8.0"
+    val kotlinVersion = "1.8.0"
 
-    implementation ("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
-//
+    implementation (libs.material3)
+
+    implementation ("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
+
     implementation ("androidx.compose.ui:ui:$composeVersion")
     implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.4.0")
 

@@ -62,44 +62,9 @@ object AppModule {
     @Provides
     fun getApi(retrofit: Retrofit): ApiInterface = retrofit.create(ApiInterface::class.java)
 
-    /*
     @Provides
     @Singleton
-    fun provideRetrofit(moshi: Moshi, client: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(ApiRoutes.BASE_URL)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .client(client)
-            .build()
+    fun provideContext(@ApplicationContext context: Context): Context {
+        return context
     }
-
-    @Provides
-    @Singleton
-    fun provideMoshi(): Moshi {
-        return Moshi.Builder()
-            .add(KotlinJsonAdapterFactory())
-            .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideLoggingInterceptor(): HttpLoggingInterceptor {
-        return HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
-    }
-
-    @Provides
-    @Singleton
-    fun provideOkHttpClient(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient {
-        return OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor)
-            .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideApiInterface(retrofit: Retrofit): ApiInterface {
-        return retrofit.create(ApiInterface::class.java)
-    }*/
 }
