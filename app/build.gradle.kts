@@ -47,35 +47,40 @@ android {
 
 dependencies {
 
+    val composeVersion = "1.7.8"
+    val hiltVersion = "2.55"
+    val retrofitVersion = "2.9.0"
+    val moshiVersion = "1.15.0"
+
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
-    
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
-    implementation("androidx.compose.runtime:runtime-livedata:1.7.6")
 
-    implementation ("androidx.compose.material:material-icons-extended:1.7.8")
+// Compose
+    implementation("androidx.compose.runtime:runtime:$composeVersion")
+    implementation("androidx.compose.runtime:runtime-livedata:$composeVersion")
+    implementation("androidx.compose.material:material-icons-extended:$composeVersion")
 
+// ViewModel & Lifecycle
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
+// Navigation
     implementation("androidx.navigation:navigation-compose:2.8.8")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
-
-
-    val hiltVersion = "2.55"
+// Hilt (Dependency Injection)
     implementation("com.google.dagger:hilt-android:$hiltVersion")
     kapt("com.google.dagger:hilt-android-compiler:$hiltVersion")
 
-
+// Network - OkHttp
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-    
-    // Retrofit & Mosi
-    val retrofitVersion = "2.9.0"
-    val moshiVersion = "1.15.0"
+
+// Network - Retrofit & Moshi
     implementation("com.squareup.retrofit2:retrofit:$retrofitVersion")
     implementation("com.squareup.retrofit2:converter-moshi:$retrofitVersion")
     implementation("com.squareup.moshi:moshi:$moshiVersion")
     implementation("com.squareup.moshi:moshi-kotlin:$moshiVersion")
     kapt("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
 
-    // Coil
+// Image Loading - Coil
     implementation("io.coil-kt:coil-compose:2.2.2")
 
 

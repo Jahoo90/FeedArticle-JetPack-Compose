@@ -34,6 +34,7 @@ class MainViewModel @Inject constructor(
 
     init {
         fetchArticles()
+        Log.i("jahoo", "Token is : ${sharedPrefManager.getUserToken()} \n User Id is : ${sharedPrefManager.getUserId()}")
     }
 
     fun fetchArticles() {

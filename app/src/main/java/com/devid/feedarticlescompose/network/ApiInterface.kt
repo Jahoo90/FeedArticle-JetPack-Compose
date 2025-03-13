@@ -3,6 +3,7 @@ package com.devid.feedarticlescompose.network
 import com.devid.feedarticlescompose.network.dtos.ArticlesResponseItem
 import com.devid.feedarticlescompose.network.dtos.AuthDto
 import com.devid.feedarticlescompose.network.dtos.AuthResponse
+import com.devid.feedarticlescompose.network.dtos.NewArticleDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Field
@@ -13,7 +14,6 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 
 interface ApiInterface {
-
 
 //    *************************************** USERS ***************************************
 
@@ -32,4 +32,6 @@ interface ApiInterface {
     @GET(ApiRoutes.ARTICLES)
     suspend fun getAllArticles(@Header("token") token: String): Response<List<ArticlesResponseItem>>?
 
+    @PUT(ApiRoutes.ARTICLES)
+    suspend fun createArticle(@Header("token") token: String, @Body newArticle: NewArticleDto): Response<Unit>?
 }

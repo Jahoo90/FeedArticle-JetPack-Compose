@@ -17,5 +17,12 @@
     <string name="something_went_wrong">Something went wrong. Please try again.</string>
     <string name="create_title">Nouvel Article</string>
     <string name="create_titre_hint">Titre</string>
+    <string name="create_descriptif_hint">Contenu</string>
+    <string name="create_image_hint">Image URL</string>
+    <string name="create_button">Enregistrer</string>
+    <string name="create_success">Article added with success !</string>
+    <string name="connection_problem">Connection problem. Please try again !</string>
+    <string name="create_failed">\"Oops, the article could not be added. Please try again!\"</string>
+    <string name="create_access">Please re-login and try again !</string>
 
 </resources>

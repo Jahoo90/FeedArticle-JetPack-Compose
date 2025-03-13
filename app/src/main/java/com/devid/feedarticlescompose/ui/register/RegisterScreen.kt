@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,7 +23,6 @@ import com.devid.feedarticlescompose.R
 import com.devid.feedarticlescompose.ui.components.MyTextField
 import com.devid.feedarticlescompose.ui.components.PrimaryButton
 import com.devid.feedarticlescompose.ui.theme.FeedArticlesComposeTheme
-import kotlinx.coroutines.flow.StateFlow
 
 
 @Composable
@@ -66,7 +64,9 @@ fun RegisterContent(registerViewModel: RegisterViewModel) {
             MyTextField(
                 value = registerViewModel.login.collectAsState().value,
                 label = "Login",
-                onValueChange = { registerViewModel.updateLogin(it) }
+                onValueChange = { registerViewModel.updateLogin(it) },
+                singleLine = true,
+                maxLength = 80
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -75,7 +75,9 @@ fun RegisterContent(registerViewModel: RegisterViewModel) {
                 value = registerViewModel.password.collectAsState().value,
                 label = "Password",
                 onValueChange = { registerViewModel.updatePassword(it) },
-                isPassword = true
+                isPassword = true,
+                singleLine = true,
+                maxLength = 80
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -84,7 +86,9 @@ fun RegisterContent(registerViewModel: RegisterViewModel) {
                 value = registerViewModel.confirmPassword.collectAsState().value,
                 label = "Confirmation Password",
                 onValueChange = { registerViewModel.updateConfirmPassword(it) },
-                isPassword = true
+                isPassword = true,
+                singleLine = true,
+                maxLength = 80
             )
 
             Spacer(modifier = Modifier.height(16.dp))

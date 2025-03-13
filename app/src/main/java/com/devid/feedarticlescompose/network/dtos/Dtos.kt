@@ -2,7 +2,6 @@ package com.devid.feedarticlescompose.network.dtos
 
 import com.squareup.moshi.Json
 
-
 //**************************************** USERS ****************************************
 
 data class AuthDto(
@@ -19,20 +18,7 @@ data class AuthResponse(
     val token: String
 )
 
-
 //**************************************** ARTICLES ****************************************
-
-
-//data class ArticleDto(
-//    @Json(name = "categorie")
-//    val categorie: Int,
-//    @Json(name = "descriptif")
-//    val descriptif: String,
-//    @Json(name = "titre")
-//    val titre: String,
-//    @Json(name = "url_image")
-//    val urlImage: String
-//)
 
 data class ArticlesResponseItem(
     @Json(name = "categorie")
@@ -50,3 +36,13 @@ data class ArticlesResponseItem(
     @Json(name = "url_image")
     val urlImage: String
 )
+
+data class NewArticleDto(
+    @Json(name = "id_u") val userId: Long,
+    @Json(name = "title") val title: String,
+    @Json(name = "desc") val description: String,
+    @Json(name = "image") val imageUrl: String,
+    @Json(name = "cat") val category: Int
+)
+
+
