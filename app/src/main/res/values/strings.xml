@@ -1,3 +1,21 @@
 <resources>
-    <string name="app_name">FeedArticlesCompose</string>
+    <string name="app_name">Feed Articles</string>
+    <string name="login_title">Connectez-vous</string>
+    <string name="get_login">Se connecter</string>
+    <string name="register_msg">"Pas de compte ? Inscrivez-vous !"</string>
+    <string name="register_title">Nouveau Compte</string>
+    <string name="get_register">S\'inscrire</string>
+    <string name="login_error">Login or password is not correct ! Please try again.</string>
+    <string name="login_success">Login successful</string>
+    <string name="token_unchanged">"Security problem. Please disconnect ant login again. "</string>
+    <string name="invalid_parameters">"Login or password is not correct. Please try again. "</string>
+    <string name="connect_later">"Can't connect right now. Please contact our support and try connect later. "</string>
+    <string name="login_hint">Login</string>
+    <string name="password_hint">Password</string>
+    <string name="register_success">"New account created with success ! "</string>
+    <string name="login_already_used">This login exist already.</string>
+    <string name="something_went_wrong">Something went wrong. Please try again.</string>
+    <string name="create_title">Nouvel Article</string>
+    <string name="create_titre_hint">Titre</string>
+
 </resources>
