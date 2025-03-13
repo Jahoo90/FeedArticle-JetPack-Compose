@@ -32,9 +32,18 @@ class MainViewModel @Inject constructor(
     private val _errorMessage = MutableSharedFlow<String>()
     val errorMessage: SharedFlow<String> = _errorMessage.asSharedFlow()
 
+    private val _selectedCategory = MutableStateFlow(0)
+    val selectedCategory: StateFlow<Int> = _selectedCategory.asStateFlow()
+
+    private val _allArticles = MutableStateFlow<List<ArticlesResponseItem>>(emptyList())
+
+    private val _categoryColor = MutableStateFlow(0)
+    val categoryColor: StateFlow<Int> = _categoryColor.asStateFlow()
+
     init {
         fetchArticles()
         Log.i("jahoo", "Token is : ${sharedPrefManager.getUserToken()} \n User Id is : ${sharedPrefManager.getUserId()}")
+        Log.i("jahoo", "Articles are : ${_articles.value}")
     }
 
     fun fetchArticles() {
@@ -44,12 +53,16 @@ class MainViewModel @Inject constructor(
             try {
                 val response = apiInterface.getAllArticles(token.toString())
                 if (response!!.isSuccessful) {
-                    val body = response.body()
-                    if (body != null) {
-                        _articles.value = body
-                    } else {
-                        _errorMessage.emit("Response body is null")
-                    }
+                    response.body()?.let { articles ->
+                        _allArticles.value = articles
+                        _articles.value =  articles
+                    } ?: _errorMessage.emit("Response body is null")
+//                    val body = response.body()
+//                    if (body != null) {
+//                        _articles.value = body
+//                    } else {
+//                        _errorMessage.emit("Response body is null")
+//                    }
                 } else {
                     _errorMessage.emit("Error fetching articles from API: ${response.code()}")
                 }
@@ -58,6 +71,15 @@ class MainViewModel @Inject constructor(
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    fun filterArticlesByCategory(category: Int) {
+        _selectedCategory.value = category
+        _articles.value = if (category == 0) {
+            _allArticles.value
+        } else {
+            _allArticles.value.filter { it.categorie == category }
         }
     }
 

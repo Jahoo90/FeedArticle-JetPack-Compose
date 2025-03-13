@@ -32,7 +32,7 @@ fun RegisterScreen(registerViewModel: RegisterViewModel, navController: NavHostC
     LaunchedEffect(key1 = registerViewModel.navigateToMain) {
         registerViewModel.navigateToMain.collect {
             navController.navigate("main"){
-                popUpTo("register") { inclusive = true }
+                popUpTo("login") { inclusive = true }
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.devid.feedarticlescompose.ui.main
 
 
+import android.graphics.drawable.Icon
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,6 +28,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallTopAppBar
 import androidx.compose.material3.SnackbarHost
@@ -54,9 +57,16 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.devid.feedarticlescompose.R
 import com.devid.feedarticlescompose.network.dtos.ArticlesResponseItem
+import com.devid.feedarticlescompose.ui.theme.Green
+import com.devid.feedarticlescompose.ui.theme.LightGreenr
+import com.devid.feedarticlescompose.ui.theme.LightPrimaryColor
+import com.devid.feedarticlescompose.ui.theme.LightRed
 import com.devid.feedarticlescompose.ui.theme.PrimaryColor
+import com.devid.feedarticlescompose.ui.theme.Red
 import com.devid.feedarticlescompose.ui.theme.VeryLightGray
+import com.devid.feedarticlescompose.ui.theme.VeryLightGreenr
 import com.devid.feedarticlescompose.ui.theme.VeryLightPrimaryColor
+import com.devid.feedarticlescompose.ui.theme.VeryLightRed
 import kotlinx.coroutines.delay
 
 @Composable
@@ -68,11 +78,16 @@ fun MainScreen(navController: NavController, viewModel: MainViewModel) {
 @Composable
 fun MainContent(navController: NavController, mainViewModel: MainViewModel) {
 
-    val articles by mainViewModel.articles.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
 
+    /*val articles by mainViewModel.articles.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 //    val allArticles = articles.toList()
     val allArticles: List<ArticlesResponseItem> = articles
+//    var filteredArticles = mainViewModel.getFilteredArticles()*/
+
+    val articles by mainViewModel.articles.collectAsState()
+    val selectedCategory by mainViewModel.selectedCategory.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(mainViewModel) {
         mainViewModel.errorMessage.collect { message ->
@@ -94,12 +109,21 @@ fun MainContent(navController: NavController, mainViewModel: MainViewModel) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
             ) {
-
-                items(allArticles.size) { index ->
+//                items(articles) { article -> // Używamy przefiltrowanej listy
+//                    ArticleItem(
+//                        title = article.titre,
+//                        description = article.descriptif,
+//                        imageUrl = article.urlImage,
+//                        category = article.categorie
+//                    )
+//                }
+                items(articles.size) { index ->
                     ArticleItem(
-                        title = allArticles[index].titre,
-                        description = allArticles[index].descriptif,
-                        imageUrl = allArticles[index].urlImage)
+                        title = articles[index].titre,
+                        description = articles[index].descriptif,
+                        imageUrl = articles[index].urlImage,
+                        category = articles[index].categorie
+                    )
                 }
             }
         }
@@ -134,24 +158,45 @@ fun MainTopAppBar(navController: NavController, mainViewModel: MainViewModel) {
 
 @Composable
 fun BottomNavigationBar(mainViewModel: MainViewModel) {
-    var selectedRadio by remember { mutableIntStateOf(0) }
+
+    val selectedCategory by mainViewModel.selectedCategory.collectAsState()
+    val categories = listOf("Tout", "Sport", "Manga", "Divers")
 
     BottomAppBar {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            listOf("Tout", "Sport", "Manga", "Divers").forEachIndexed { index, text ->
+            categories.forEachIndexed { index, text ->
                 Row(
-                    modifier = Modifier.clickable { selectedRadio = index },
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .clickable { mainViewModel.filterArticlesByCategory(index) }
                 ) {
                     RadioButton(
-                        selected = selectedRadio == index,
-                        onClick = { selectedRadio = index }
+                        selected = selectedCategory == index,
+                        onClick = {
+                            mainViewModel.filterArticlesByCategory(index)
+                            Log.i("jahoo", "index is : $index")
+                        },
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = when (index) {
+                                1 -> Green
+                                2 -> Red
+                                else -> PrimaryColor
+                            },
+                            unselectedColor = when (index) {
+                            1 -> LightGreenr
+                            2 -> LightRed
+                            else -> LightPrimaryColor
+                        }
+                        )
                     )
                     Text(text = text)
                 }
+
             }
         }
     }
@@ -162,7 +207,8 @@ fun BottomNavigationBar(mainViewModel: MainViewModel) {
 fun ArticleItem(
     title: String,
     description: String,
-    imageUrl: String?
+    imageUrl: String?,
+    category: Int
 ) {
     Card(
         modifier = Modifier
@@ -171,9 +217,14 @@ fun ArticleItem(
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
-            modifier = Modifier.background(VeryLightPrimaryColor).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-
+            modifier = Modifier
+                .fillMaxWidth()
+                .background( when (category) {
+                    1 -> VeryLightGreenr
+                    2 -> VeryLightRed
+                    else -> VeryLightPrimaryColor
+                }),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)

@@ -24,7 +24,6 @@ class CreateViewModel @Inject constructor(
     private val token = sharedPreferencesManager.getUserToken()
     private val userId = sharedPreferencesManager.getUserId()
 
-
     var title by mutableStateOf("")
         private set
     var description by mutableStateOf("")

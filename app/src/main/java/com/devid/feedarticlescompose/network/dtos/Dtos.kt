@@ -44,5 +44,3 @@ data class NewArticleDto(
     @Json(name = "image") val imageUrl: String,
     @Json(name = "cat") val category: Int
 )
-
-

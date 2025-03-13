@@ -39,6 +39,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+        freeCompilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn")
     }
     buildFeatures {
         compose = true
@@ -51,6 +52,13 @@ dependencies {
     val hiltVersion = "2.55"
     val retrofitVersion = "2.9.0"
     val moshiVersion = "1.15.0"
+    val kotlin_version = "1.8.0"
+
+    implementation ("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
+//
+    implementation ("androidx.compose.ui:ui:$composeVersion")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.4.0")
+
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
